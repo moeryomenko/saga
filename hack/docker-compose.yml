@@ -1,0 +1,38 @@
+version: '3.9'
+
+services:
+  postgres:
+    container_name: postgres
+    image: "postgres:14-alpine"
+    environment:
+      POSTGRES_DATABASE: "${PG_DB}"
+      POSTGRES_USER: "${PG_USER}"
+      POSTGRES_PASSWORD: "${PG_PASS}"
+    ports:
+      - 5432:5432
+    networks:
+      - local
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    container_name: redis
+    image: redis:6-alpine
+    networks:
+      - local
+    ports:
+      - 6379:6379
+    healthcheck:
+      # based on: https://stackoverflow.com/a/70706628/7821330
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+
+networks:
+  local:
+    name: local
