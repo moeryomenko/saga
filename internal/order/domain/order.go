@@ -95,7 +95,7 @@ func CancelOrder(order Order) (CanceledOrder, error) {
 	case PaidOrder:
 		return CanceledOrder{PendingOrder: order.PendingOrder}, nil
 	case StockedOrder:
-		return CanceledOrder{PendingOrder: order.PendingOrder}, nil
+		return CanceledOrder(order), nil
 	default:
 		return CanceledOrder{}, ErrCancelOrder
 	}
