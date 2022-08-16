@@ -4,10 +4,10 @@ set -euo pipefail
 RUN="${1:-}"
 
 # Run integration tests, example:
-#	set +e
-#	go test -tags "integration postgres" ./internal/postgres/... -v -p 1 -count 1 -run $(or $(RUN),TestIntegration)
-#	result=$?
-#	set -e
+set +e
+go test -tags "integration" ./... -v -p 1 -count 1 -run TestIntegration
+result=$?
+set -e
 
 if [[ ${result} -eq 0 ]]; then
     echo -e "\n\e[32mTests passed!\e[0m\n"

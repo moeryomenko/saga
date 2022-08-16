@@ -5,6 +5,7 @@ import uuid "github.com/gofrs/uuid/v3"
 type Event interface{}
 
 type CreateOrder struct {
+	OrderID    uuid.UUID
 	CustomerID uuid.UUID
 }
 
@@ -29,9 +30,8 @@ type RejectStock struct{}
 func Apply(order Order, event Event) (Order, error) {
 	switch event := event.(type) {
 	case CreateOrder:
-		orderID, _ := uuid.NewV4()
 		return EmptyOrder{
-			ID:         orderID,
+			ID:         event.OrderID,
 			CustomerID: event.CustomerID,
 		}, nil
 	case AddItem:

@@ -1,11 +1,13 @@
 package repository
 
 import (
+	"encoding/json"
 	"errors"
 
-	"github.com/gofrs/uuid/v3"
-	"github.com/moeryomenko/saga/internal/order/domain"
+	"github.com/jackc/pgtype"
 	"github.com/shopspring/decimal"
+
+	"github.com/moeryomenko/saga/internal/order/domain"
 )
 
 const (
@@ -19,12 +21,26 @@ const (
 )
 
 type Order struct {
-	OrderID    uuid.UUID
-	CustomerID uuid.UUID
-	Items      []string
+	OrderID    pgtype.UUID
+	CustomerID pgtype.UUID
+	Items      pgtype.JSONB
 	Price      *decimal.Decimal
-	PaymentID  *uuid.UUID
+	PaymentID  pgtype.UUID
 	Kind       string
+}
+
+func itemsMap(i pgtype.JSONB) []string {
+	var items []string
+	json.Unmarshal(i.Bytes, &items)
+	return items
+}
+
+func itemsToModel(items []string) pgtype.JSONB {
+	b, err := json.Marshal(items)
+	if err != nil {
+		return pgtype.JSONB{Status: pgtype.Null}
+	}
+	return pgtype.JSONB{Bytes: b, Status: pgtype.Present}
 }
 
 func mapToDomain(o *Order) domain.Order {
@@ -35,25 +51,25 @@ func mapToDomain(o *Order) domain.Order {
 	switch o.Kind {
 	case empty:
 		return domain.EmptyOrder{
-			ID:         o.OrderID,
-			CustomerID: o.CustomerID,
+			ID:         o.OrderID.Bytes,
+			CustomerID: o.CustomerID.Bytes,
 		}
 	case active:
 		return domain.ActiveOrder{
 			EmptyOrder: domain.EmptyOrder{
-				ID:         o.OrderID,
-				CustomerID: o.CustomerID,
+				ID:         o.OrderID.Bytes,
+				CustomerID: o.CustomerID.Bytes,
 			},
-			Items: o.Items,
+			Items: itemsMap(o.Items),
 		}
 	case pending:
 		return domain.PendingOrder{
 			ActiveOrder: domain.ActiveOrder{
 				EmptyOrder: domain.EmptyOrder{
-					ID:         o.OrderID,
-					CustomerID: o.CustomerID,
+					ID:         o.OrderID.Bytes,
+					CustomerID: o.CustomerID.Bytes,
 				},
-				Items: o.Items,
+				Items: itemsMap(o.Items),
 			},
 			Price: *o.Price,
 		}
@@ -62,10 +78,10 @@ func mapToDomain(o *Order) domain.Order {
 			PendingOrder: domain.PendingOrder{
 				ActiveOrder: domain.ActiveOrder{
 					EmptyOrder: domain.EmptyOrder{
-						ID:         o.OrderID,
-						CustomerID: o.CustomerID,
+						ID:         o.OrderID.Bytes,
+						CustomerID: o.CustomerID.Bytes,
 					},
-					Items: o.Items,
+					Items: itemsMap(o.Items),
 				},
 				Price: *o.Price,
 			},
@@ -75,14 +91,14 @@ func mapToDomain(o *Order) domain.Order {
 			PendingOrder: domain.PendingOrder{
 				ActiveOrder: domain.ActiveOrder{
 					EmptyOrder: domain.EmptyOrder{
-						ID:         o.OrderID,
-						CustomerID: o.CustomerID,
+						ID:         o.OrderID.Bytes,
+						CustomerID: o.CustomerID.Bytes,
 					},
-					Items: o.Items,
+					Items: itemsMap(o.Items),
 				},
 				Price: *o.Price,
 			},
-			PaymentID: *o.PaymentID,
+			PaymentID: o.PaymentID.Bytes,
 		}
 	case complited:
 		return domain.CompletedOrder{
@@ -90,14 +106,14 @@ func mapToDomain(o *Order) domain.Order {
 				PendingOrder: domain.PendingOrder{
 					ActiveOrder: domain.ActiveOrder{
 						EmptyOrder: domain.EmptyOrder{
-							ID:         o.OrderID,
-							CustomerID: o.CustomerID,
+							ID:         o.OrderID.Bytes,
+							CustomerID: o.CustomerID.Bytes,
 						},
-						Items: o.Items,
+						Items: itemsMap(o.Items),
 					},
 					Price: *o.Price,
 				},
-				PaymentID: *o.PaymentID,
+				PaymentID: o.PaymentID.Bytes,
 			},
 		}
 	case canceled:
@@ -105,10 +121,10 @@ func mapToDomain(o *Order) domain.Order {
 			PendingOrder: domain.PendingOrder{
 				ActiveOrder: domain.ActiveOrder{
 					EmptyOrder: domain.EmptyOrder{
-						ID:         o.OrderID,
-						CustomerID: o.CustomerID,
+						ID:         o.OrderID.Bytes,
+						CustomerID: o.CustomerID.Bytes,
 					},
-					Items: o.Items,
+					Items: itemsMap(o.Items),
 				},
 				Price: *o.Price,
 			},
@@ -124,31 +140,42 @@ func mapToModel(o domain.Order) (*Order, error) {
 	}
 
 	order := &Order{
-		OrderID:    o.GetID(),
-		CustomerID: o.GetCustomerID(),
+		OrderID:    pgtype.UUID{Bytes: o.GetID(), Status: pgtype.Present},
+		CustomerID: pgtype.UUID{Bytes: o.GetCustomerID(), Status: pgtype.Present},
+		Items:      pgtype.JSONB{Status: pgtype.Null},
+		PaymentID:  pgtype.UUID{Status: pgtype.Null},
 	}
 
-	switch o := o.(type) {
+	switch o := any(o).(type) {
 	case domain.EmptyOrder:
+		order.Kind = empty
 	case domain.ActiveOrder:
-		copy(order.Items, o.Items)
+		order.Items = itemsToModel(o.Items)
+		order.Kind = active
 	case domain.PendingOrder:
-		copy(order.Items, o.Items)
+		order.Items = itemsToModel(o.Items)
 		order.Price = &o.Price
+		order.Kind = pending
 	case domain.StockedOrder:
-		copy(order.Items, o.Items)
+		order.Items = itemsToModel(o.Items)
 		order.Price = &o.Price
+		order.Kind = stocked
 	case domain.PaidOrder:
-		copy(order.Items, o.Items)
+		order.Items = itemsToModel(o.Items)
 		order.Price = &o.Price
-		order.PaymentID = &o.PaymentID
+		order.PaymentID = pgtype.UUID{Bytes: o.PaymentID, Status: pgtype.Present}
+		order.Kind = paid
 	case domain.CompletedOrder:
-		copy(order.Items, o.Items)
+		order.Items = itemsToModel(o.Items)
 		order.Price = &o.Price
-		order.PaymentID = &o.PaymentID
+		order.PaymentID = pgtype.UUID{Bytes: o.PaymentID, Status: pgtype.Present}
+		order.Kind = complited
 	case domain.CanceledOrder:
-		copy(order.Items, o.Items)
+		order.Items = itemsToModel(o.Items)
 		order.Price = &o.Price
+		order.Kind = canceled
+	default:
+		return nil, errors.New(`invalid order`)
 	}
 
 	return order, nil
