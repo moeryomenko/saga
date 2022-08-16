@@ -7,6 +7,7 @@ import (
 
 type Order interface {
 	GetID() uuid.UUID
+	GetCustomerID() uuid.UUID
 }
 
 type EmptyOrder struct {
@@ -18,6 +19,10 @@ type EmptyOrder struct {
 
 func (o EmptyOrder) GetID() uuid.UUID {
 	return o.ID
+}
+
+func (o EmptyOrder) GetCustomerID() uuid.UUID {
+	return o.CustomerID
 }
 
 type ActiveOrder struct {

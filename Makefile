@@ -54,6 +54,10 @@ up: ## Up local development environments, see hack/docker-compose.yml
 down: ## Stop and down local development environments.
 	@PG_USER=$(PG_USER) PG_DBS=$(PG_DBS) PG_PASS=$(PG_PASS) docker compose -f hack/docker-compose.yml --project-directory hack down
 
+.PHONY: run
+run: ## Run given `service` on local environment.
+	@./hack/run.sh $(service)
+
 .PHONY: help
 help: ## Print this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
