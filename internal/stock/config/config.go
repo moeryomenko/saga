@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -19,28 +18,7 @@ func LoadConfig() (*Config, error) {
 
 // Config represents service configurations.
 type Config struct {
-	Host string `envconfig:"HOST"`
-	Port int    `envconfig:"PORT" default:"8080"`
-
 	Health HealthConfig `envconfig:"HEALTH"`
-
-	Database *DBConfig `envconfig:"DB"`
-}
-
-// Addr returns address for listening.
-func (cfg *Config) Addr() string {
-	return fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
-}
-
-// DBConfig represents database connection configuration.
-type DBConfig struct {
-	Host     string `envconfig:"HOST"`
-	Port     int    `envconfig:"PORT" default:"5432"`
-	Name     string `envconfig:"NAME"`
-	User     string `envconfig:"USER"`
-	Password string `encconfig:"PASSWORD"`
-
-	Pool *PoolConfig `envconfig:"POOL"`
 }
 
 // PoolConfig represents databese connection pool configuration.
@@ -51,7 +29,7 @@ type PoolConfig struct {
 
 // HealthConfig represents health controller configuration.
 type HealthConfig struct {
-	Port          int           `envconfig:"PORT" default:"6060"`
+	Port          int           `envconfig:"PORT" default:"6061"`
 	LiveEndpoint  string        `envconfig:"LIVINESS_ENDPOINT" default:"/livez"`
 	ReadyEndpoint string        `envconfig:"READINESS_ENDPOINT" default:"/ready"`
 	Period        time.Duration `envconfig:"PERIOD" default:"3s"`

@@ -31,7 +31,7 @@ type Order struct {
 
 func itemsMap(i pgtype.JSONB) []string {
 	var items []string
-	json.Unmarshal(i.Bytes, &items)
+	_ = json.Unmarshal(i.Bytes, &items)
 	return items
 }
 

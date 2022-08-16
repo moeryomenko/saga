@@ -72,8 +72,7 @@ func (RestController) DeleteOrderOrderIDItem(w http.ResponseWriter, r *http.Requ
 }
 
 func mapDomainError(err error) int {
-	switch {
-	case errors.Is(err, domain.ErrDomain):
+	if errors.Is(err, domain.ErrDomain) {
 		return http.StatusPreconditionFailed
 	}
 	return http.StatusInternalServerError
