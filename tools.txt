@@ -1,0 +1,2 @@
+github.com/golangci/golangci-lint/cmd/golangci-lint@v1.47.2
+github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0

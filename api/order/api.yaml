@@ -1,0 +1,160 @@
+openapi: 3.0.0
+info:
+  title: "Orders service API"
+  version: "1.0.0"
+  contact: {}
+servers:
+  - url: /
+paths:
+  /order:
+    post:
+      summary: Create new order
+      requestBody:
+        description: Order form
+        content:
+          appication/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrder'
+        required: true
+      responses:
+        201:
+          description: Sussessfully create order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        500:
+          description: Internal service error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /order/{orderID}:
+    put:
+      parameters:
+        - in: path
+          name: orderID 
+          schema:
+            type: string
+            format: uuid
+          required: true
+      summary: Add item to order
+      requestBody:
+        description: item form
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Item'
+        required: true
+      responses:
+        204:
+          description: Item added to order
+        412:
+          description: Order unable to changes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal service error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: close order and send to process payments
+      parameters:
+        - in: path
+          name: orderID 
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        204:
+          description: order sended to processing 
+        412:
+          description: Order unable to changes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal service error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /order/{orderID}/{item}:
+    delete:
+      parameters:
+        - in: path
+          name: orderID 
+          schema:
+            type: string
+            format: uuid
+          required: true
+        - in: path
+          name: item 
+          schema:
+            type: string
+          required: true
+      summary: Remove item from order
+      requestBody:
+        description: item form
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Item'
+        required: true
+      responses:
+        204:
+          description: Item removed from order
+        412:
+          description: Order unable to changes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal service error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    CreateOrder:
+      type: object
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            type: string
+        payment_id:
+          type: string
+          format: uuid
+    Item:
+      type: object
+      properties:
+        name:
+          type: string
+    Error:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: string

@@ -33,6 +33,10 @@ lint: tools ## Check the project with lint
 .PHONY: check
 check: lint test ## Check project with static checks and unit tests
 
+.PHONE: gen
+gen: tools ## Generate projects files and components.
+	@oapi-codegen --config api/order/config.yaml api/order/api.yaml > internal/order/infrastructure/api/http.gen.go
+
 .PHONY: deps
 deps: ## Manage go mod dependencies, beautify go.mod and go.sum files
 	@go mod tidy
