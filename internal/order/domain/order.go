@@ -5,11 +5,19 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type Order interface {
+	GetID() uuid.UUID
+}
+
 type EmptyOrder struct {
 	// ID is id of order.
 	ID uuid.UUID
 	// CustomerID needs for reference to the customer.
 	CustomerID uuid.UUID
+}
+
+func (o EmptyOrder) GetID() uuid.UUID {
+	return o.ID
 }
 
 type ActiveOrder struct {
@@ -26,6 +34,14 @@ type PendingOrder struct {
 	Price decimal.Decimal
 }
 
+type StockedOrder struct {
+	PendingOrder
+}
+
+type CanceledOrder struct {
+	PendingOrder
+}
+
 type PaidOrder struct {
 	PendingOrder
 
@@ -33,38 +49,97 @@ type PaidOrder struct {
 	PaymentID uuid.UUID
 }
 
+type CompletedOrder struct {
+	PaidOrder
+}
+
+// AttachPayments attachs payments info to order.
+func AttachPayments(order Order, paymentID uuid.UUID) (Order, error) {
+	switch order := order.(type) {
+	case PendingOrder:
+		return PaidOrder{
+			PendingOrder: order,
+			PaymentID:    paymentID,
+		}, nil
+	case StockedOrder:
+		return CompletedOrder{
+			PaidOrder: PaidOrder{
+				PendingOrder: order.PendingOrder,
+				PaymentID:    paymentID,
+			},
+		}, nil
+	default:
+		return nil, ErrPayOrder
+	}
+}
+
+// StockOrder mark order as stocked.
+func StockOrder(order Order) (Order, error) {
+	switch order := order.(type) {
+	case PendingOrder:
+		return StockedOrder{
+			PendingOrder: order,
+		}, nil
+	case PaidOrder:
+		return CompletedOrder{
+			PaidOrder: order,
+		}, nil
+	default:
+		return nil, ErrStockOrder
+	}
+}
+
+// CancelOrder cancels order.
+func CancelOrder(order Order) (CanceledOrder, error) {
+	switch order := order.(type) {
+	case PaidOrder:
+		return CanceledOrder{PendingOrder: order.PendingOrder}, nil
+	case StockedOrder:
+		return CanceledOrder{PendingOrder: order.PendingOrder}, nil
+	default:
+		return CanceledOrder{}, ErrCancelOrder
+	}
+}
+
 // AddItemToOrder adds item to order.
-func AddItemToOrder[Order EmptyOrder | ActiveOrder](order Order, item string) ActiveOrder {
+func AddItemToOrder(order Order, item string) (ActiveOrder, error) {
 	switch order := any(order).(type) {
 	case EmptyOrder:
 		return ActiveOrder{
 			EmptyOrder: EmptyOrder{ID: order.ID, CustomerID: order.CustomerID},
 			Items:      append([]string{}, item),
-		}
+		}, nil
 	case ActiveOrder:
 		return ActiveOrder{
 			EmptyOrder: EmptyOrder{ID: order.ID, CustomerID: order.CustomerID},
 			Items:      append(order.Items, item),
-		}
+		}, nil
 	default:
-		panic(`invalid order type`)
+		return ActiveOrder{}, ErrAddItem
 	}
 }
 
 // RemoveItemFromOrder remove given item from order.
-func RemoveItemFromOrder(order ActiveOrder, item string) (*EmptyOrder, *ActiveOrder) {
-	items := removeItem(order.Items, item)
+func RemoveItemFromOrder(order Order, item string) (Order, error) {
+	switch order := order.(type) {
+	case EmptyOrder:
+		return nil, ErrRemoveItemEmpty
+	case ActiveOrder:
+		items := removeItem(order.Items, item)
 
-	if len(items) == 0 {
-		return &EmptyOrder{
-			ID:         order.ID,
-			CustomerID: order.CustomerID,
+		if len(items) == 0 {
+			return EmptyOrder{
+				ID:         order.ID,
+				CustomerID: order.CustomerID,
+			}, nil
+		}
+
+		return ActiveOrder{
+			EmptyOrder: order.EmptyOrder,
+			Items:      items,
 		}, nil
-	}
-
-	return nil, &ActiveOrder{
-		EmptyOrder: order.EmptyOrder,
-		Items:      items,
+	default:
+		return nil, ErrRemoveItem
 	}
 }
 
