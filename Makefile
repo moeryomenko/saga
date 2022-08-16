@@ -3,7 +3,7 @@ COVER_FILE ?= coverage.out
 
 # Database related variables.
 PG_USER ?= test
-PG_DB ?= test
+PG_DBS ?= orders 
 PG_PASS ?= pass
 
 # Tools
@@ -43,12 +43,12 @@ clean: ## Clean the project from built files
 
 .PHONY: up
 up: ## Up local development environments, see hack/docker-compose.yml
-	@PG_USER=$(PG_USER) PG_DB=$(PG_DB) PG_PASS=$(PG_PASS) docker compose -f hack/docker-compose.yml --project-directory hack up \
+	@PG_USER=$(PG_USER) PG_DBS=$(PG_DBS) PG_PASS=$(PG_PASS) docker compose -f hack/docker-compose.yml --project-directory hack up \
 		--build --force-recreate --renew-anon-volumes -d
 
 .PHONY: down
 down: ## Stop and down local development environments.
-	@PG_USER=$(PG_USER) PG_DB=$(PG_DB) PG_PASS=$(PG_PASS) docker compose -f hack/docker-compose.yml --project-directory hack down
+	@PG_USER=$(PG_USER) PG_DBS=$(PG_DBS) PG_PASS=$(PG_PASS) docker compose -f hack/docker-compose.yml --project-directory hack down
 
 .PHONY: help
 help: ## Print this help

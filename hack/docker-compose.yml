@@ -5,13 +5,18 @@ services:
     container_name: postgres
     image: "postgres:14-alpine"
     environment:
-      POSTGRES_DATABASE: "${PG_DB}"
+      POSTGRES_MULTIPLE_DATABASES: "${PG_DBS}"
       POSTGRES_USER: "${PG_USER}"
       POSTGRES_PASSWORD: "${PG_PASS}"
     ports:
       - 5432:5432
     networks:
       - local
+    volumes:
+      - type: bind
+        source: ./docker-entrypoint-initdb.d
+        target: /docker-entrypoint-initdb.d
+        read_only: true
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 10s
