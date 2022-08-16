@@ -19,9 +19,8 @@ func LoadConfig() (*Config, error) {
 
 // Config represents service configurations.
 type Config struct {
-	Host       string `envconfig:"HOST"`
-	Port       int    `envconfig:"PORT" default:"8080"`
-	APIBaseURL string `envconfig:"API_BASE_URL" default:"/api/v1"`
+	Host string `envconfig:"HOST"`
+	Port int    `envconfig:"PORT" default:"8080"`
 
 	Health HealthConfig `envconfig:"HEALTH"`
 
@@ -62,4 +61,5 @@ type HealthConfig struct {
 	LiveEndpoint  string        `envconfig:"LIVINESS_ENDPOINT" default:"/livez"`
 	ReadyEndpoint string        `envconfig:"READINESS_ENDPOINT" default:"/ready"`
 	Period        time.Duration `envconfig:"PERIOD" default:"3s"`
+	GracePeriod   time.Duration `envconfig:"GRACE_PERIOD" default:"30s"`
 }

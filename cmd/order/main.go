@@ -9,6 +9,7 @@ import (
 	"github.com/moeryomenko/squad"
 
 	"github.com/moeryomenko/saga/internal/order/config"
+	"github.com/moeryomenko/saga/internal/order/infrastructure/api"
 	"github.com/moeryomenko/saga/internal/order/infrastructure/repository"
 )
 
@@ -20,7 +21,7 @@ func main() {
 	}
 
 	group, err := squad.New(
-		squad.WithSignalHandler(),
+		squad.WithSignalHandler(squad.WithGracefulPeriod(cfg.Health.GracePeriod)),
 		squad.WithBootstrap(repository.Init(cfg)),
 		squad.WithCloses(repository.Close),
 	)
@@ -37,6 +38,7 @@ func main() {
 	)
 
 	group.RunGracefully(health.Heartbeat, health.Stop)
+	group.RunGracefully(squad.RunServer(api.New(cfg)))
 
 	errs := group.Wait()
 	for _, err := range errs {

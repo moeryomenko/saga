@@ -1,7 +1,7 @@
 package domain
 
 import (
-	uuid "github.com/gofrs/uuid/v3"
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
 
@@ -149,13 +149,18 @@ func RemoveItemFromOrder(order Order, item string) (Order, error) {
 }
 
 // CalculatePrice calculate price and close order to changes.
-func CalculatePrice(order ActiveOrder) PendingOrder {
-	return PendingOrder{
-		ActiveOrder: ActiveOrder{
-			EmptyOrder: order.EmptyOrder,
-			Items:      order.Items,
-		},
-		Price: Price(order.Items),
+func CalculatePrice(order Order) (Order, error) {
+	switch order := order.(type) {
+	case ActiveOrder:
+		return PendingOrder{
+			ActiveOrder: ActiveOrder{
+				EmptyOrder: order.EmptyOrder,
+				Items:      order.Items,
+			},
+			Price: Price(order.Items),
+		}, nil
+	default:
+		return nil, ErrEmptyOrder
 	}
 }
 

@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/gofrs/uuid/v3"
+	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 

@@ -1,6 +1,6 @@
 package domain
 
-import uuid "github.com/gofrs/uuid/v3"
+import "github.com/google/uuid"
 
 type Event interface{}
 
@@ -16,6 +16,8 @@ type AddItem struct {
 type RemoveItem struct {
 	Item string
 }
+
+type Process struct{}
 
 type CofirmPayment struct {
 	PaymentID uuid.UUID
@@ -38,6 +40,8 @@ func Apply(order Order, event Event) (Order, error) {
 		return AddItemToOrder(order, event.Item)
 	case RemoveItem:
 		return RemoveItemFromOrder(order, event.Item)
+	case Process:
+		return CalculatePrice(order)
 	case CofirmPayment:
 		return AttachPayments(order, event.PaymentID)
 	case ConfirmStock:

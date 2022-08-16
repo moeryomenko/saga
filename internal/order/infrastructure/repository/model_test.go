@@ -3,7 +3,7 @@ package repository
 import (
 	"testing"
 
-	"github.com/gofrs/uuid/v3"
+	"github.com/google/uuid"
 	"github.com/moeryomenko/saga/internal/order/domain"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
@@ -123,7 +123,6 @@ func Test_mapToModel(t *testing.T) {
 }
 
 func genUUID(t *testing.T) uuid.UUID {
-	val, err := uuid.NewV4()
-	require.NoError(t, err)
+	val := uuid.New()
 	return val
 }

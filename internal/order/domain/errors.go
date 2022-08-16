@@ -11,4 +11,5 @@ var (
 	ErrRemoveItem      = errors.New(`removing a item from an order that is being processed`)
 	ErrPayOrder        = errors.New(`payment for a prepared order`)
 	ErrStockOrder      = errors.New(`stocking of not prepared order`)
+	ErrEmptyOrder      = errors.New(`couldn't process empty order`)
 )
