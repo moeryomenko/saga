@@ -23,6 +23,19 @@ services:
       timeout: 5s
       retries: 5
 
+  migrations:
+    container_name: migrations
+    image: migrate/migrate
+    volumes:
+      - ../migrations/order:/migrations
+    command:
+      [ "-path", "/migrations", "-database", "postgres://${PG_USER}:${PG_PASS}@postgres:5432/orders?sslmode=disable", "up" ]
+    networks:
+      - local
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   redis:
     container_name: redis
     image: redis:6-alpine
