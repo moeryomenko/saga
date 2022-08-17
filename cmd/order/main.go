@@ -10,7 +10,9 @@ import (
 
 	"github.com/moeryomenko/saga/internal/order/config"
 	"github.com/moeryomenko/saga/internal/order/infrastructure/api"
+	"github.com/moeryomenko/saga/internal/order/infrastructure/eventhandler"
 	"github.com/moeryomenko/saga/internal/order/infrastructure/repository"
+	"github.com/moeryomenko/saga/internal/order/service"
 )
 
 func main() {
@@ -22,8 +24,8 @@ func main() {
 
 	group, err := squad.New(
 		squad.WithSignalHandler(squad.WithGracefulPeriod(cfg.Health.GracePeriod)),
-		squad.WithBootstrap(repository.Init(cfg)),
-		squad.WithCloses(repository.Close),
+		squad.WithBootstrap(repository.Init(cfg), eventhandler.Init(cfg)),
+		squad.WithCloses(repository.Close, eventhandler.Close),
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, `bootstrap service: %s`, err)
@@ -37,6 +39,7 @@ func main() {
 		healing.WithReadyEndpoint(cfg.Health.ReadyEndpoint),
 	)
 
+	group.Run(eventhandler.HandlerEvents(service.HandleEvent))
 	group.RunGracefully(health.Heartbeat, health.Stop)
 	group.RunGracefully(squad.RunServer(api.New(cfg)))
 

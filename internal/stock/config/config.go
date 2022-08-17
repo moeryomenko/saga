@@ -23,11 +23,6 @@ type Config struct {
 	Stream StreamConfig `envconfig:"STREAM"`
 }
 
-type PoolConfig struct {
-	MaxOpenConns int `envconfig:"MAX_OPEN_CONNS" default:"20"`
-	MaxIdleConns int `envconfig:"MAX_IDLE_CONNS" default:"20"`
-}
-
 // HealthConfig represents health controller configuration.
 type HealthConfig struct {
 	Port          int           `envconfig:"PORT" default:"6061"`
