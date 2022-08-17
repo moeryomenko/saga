@@ -10,11 +10,18 @@ import (
 type HandlerDecorator struct {
 	errMapper   func(error) int
 	requestBody Validated
-	operation   func(context.Context) (any, int, error)
+	onSuccess   int
+	operation   func(context.Context) (any, error)
 	mutation    bool
 }
 
 type Option func(*HandlerDecorator)
+
+func WithDefaultStatus(status int) Option {
+	return func(hd *HandlerDecorator) {
+		hd.onSuccess = status
+	}
+}
 
 func WithErrorMapper(mapper func(error) int) Option {
 	return func(hd *HandlerDecorator) {
@@ -29,14 +36,16 @@ func WithRequestBody(request Validated) Option {
 	}
 }
 
-func WithOperation(op func(context.Context) (any, int, error)) Option {
+func WithOperation(op func(context.Context) (any, error)) Option {
 	return func(hd *HandlerDecorator) {
 		hd.operation = op
 	}
 }
 
 func handlerDecorator(w http.ResponseWriter, r *http.Request, opts ...Option) {
-	decorator := &HandlerDecorator{}
+	decorator := &HandlerDecorator{
+		onSuccess: http.StatusOK,
+	}
 	for _, opt := range opts {
 		opt(decorator)
 	}
@@ -66,10 +75,10 @@ func handlerDecorator(w http.ResponseWriter, r *http.Request, opts ...Option) {
 		}
 	}
 
-	resp, status, err := decorator.operation(ctx)
+	resp, err := decorator.operation(ctx)
 	switch err {
 	case nil:
-		apiSuccess(ctx, w, status, resp)
+		apiSuccess(ctx, w, decorator.onSuccess, resp)
 	default:
 		status := http.StatusInternalServerError
 		if decorator.errMapper != nil {

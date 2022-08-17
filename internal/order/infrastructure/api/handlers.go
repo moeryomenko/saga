@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/moeryomenko/saga/internal/order/config"
 	"github.com/moeryomenko/saga/internal/order/domain"
-	"github.com/moeryomenko/saga/internal/order/infrastructure/repository"
+	"github.com/moeryomenko/saga/internal/order/service"
 )
 
 func New(cfg *config.Config) *http.Server {
@@ -25,49 +25,44 @@ type RestController struct{}
 
 func (RestController) PostOrder(w http.ResponseWriter, r *http.Request) {
 	var createOrder CreateOrder
-	handlerDecorator(w, r, WithRequestBody(&createOrder), WithOperation(func(ctx context.Context) (any, int, error) {
-		if createOrder.CustomerId == nil {
-			return nil, http.StatusBadRequest, nil
-		}
+	handlerDecorator(w, r, WithRequestBody(&createOrder), WithOperation(func(ctx context.Context) (any, error) {
 		orderID := uuid.New()
-		order, err := repository.PersistOrder(ctx, orderID, domain.CreateOrder{
+
+		order, err := service.HandleEvent(ctx, orderID, domain.CreateOrder{
 			OrderID:    orderID,
 			CustomerID: *createOrder.CustomerId,
 		})
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
 
-		return mapOrder(order), http.StatusCreated, nil
-	}))
+		return mapOrder(order), nil
+	}), WithDefaultStatus(http.StatusCreated))
 }
 
 func (RestController) PostOrderOrderID(w http.ResponseWriter, r *http.Request, orderID openapi_types.UUID) {
-	handlerDecorator(w, r, WithOperation(func(ctx context.Context) (any, int, error) {
-		_, err := repository.PersistOrder(ctx, orderID, domain.Process{})
-		return nil, http.StatusOK, err
+	handlerDecorator(w, r, WithOperation(func(ctx context.Context) (any, error) {
+		_, err := service.HandleEvent(ctx, orderID, domain.Process{})
+		return nil, err
 	}), WithErrorMapper(mapDomainError))
 }
 
 func (RestController) PutOrderOrderID(w http.ResponseWriter, r *http.Request, orderID openapi_types.UUID) {
 	var item Item
-	handlerDecorator(w, r, WithRequestBody(&item), WithOperation(func(ctx context.Context) (any, int, error) {
-		_, err := repository.PersistOrder(ctx, orderID, domain.AddItem{
+	handlerDecorator(w, r, WithRequestBody(&item), WithOperation(func(ctx context.Context) (any, error) {
+		_, err := service.HandleEvent(ctx, orderID, domain.AddItem{
 			Item: *item.Name,
 		})
-		if err != nil {
-			return nil, 0, err
-		}
-		return nil, http.StatusNoContent, nil
-	}), WithErrorMapper(mapDomainError))
+		return nil, err
+	}), WithDefaultStatus(http.StatusNoContent), WithErrorMapper(mapDomainError))
 }
 
 func (RestController) DeleteOrderOrderIDItem(w http.ResponseWriter, r *http.Request, orderID openapi_types.UUID, item string) {
-	handlerDecorator(w, r, WithOperation(func(ctx context.Context) (any, int, error) {
-		_, err := repository.PersistOrder(ctx, orderID, domain.RemoveItem{
+	handlerDecorator(w, r, WithOperation(func(ctx context.Context) (any, error) {
+		_, err := service.HandleEvent(ctx, orderID, domain.RemoveItem{
 			Item: item,
 		})
-		return nil, http.StatusOK, err
+		return nil, err
 	}), WithErrorMapper(mapDomainError))
 }
 
