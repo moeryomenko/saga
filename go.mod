@@ -9,6 +9,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/uuid v1.3.0
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jackc/pgtype v1.12.0
 	github.com/jackc/pgx/v4 v4.17.0
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -31,7 +32,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/invopop/yaml v0.1.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.13.0 // indirect

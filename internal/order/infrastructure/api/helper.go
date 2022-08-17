@@ -9,7 +9,7 @@ import (
 
 type HandlerDecorator struct {
 	errMapper   func(error) int
-	requestBody any
+	requestBody Validated
 	operation   func(context.Context) (any, int, error)
 	mutation    bool
 }
@@ -22,7 +22,7 @@ func WithErrorMapper(mapper func(error) int) Option {
 	}
 }
 
-func WithRequestBody(request any) Option {
+func WithRequestBody(request Validated) Option {
 	return func(hd *HandlerDecorator) {
 		hd.requestBody = request
 		hd.mutation = true
@@ -54,6 +54,12 @@ func handlerDecorator(w http.ResponseWriter, r *http.Request, opts ...Option) {
 		}
 
 		err = json.Unmarshal(body, decorator.requestBody)
+		if err != nil {
+			apiError(ctx, w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err = decorator.requestBody.Validate()
 		if err != nil {
 			apiError(ctx, w, err.Error(), http.StatusBadRequest)
 			return
