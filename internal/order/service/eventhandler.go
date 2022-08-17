@@ -12,7 +12,16 @@ import (
 func HandleEvent(ctx context.Context, orderID uuid.UUID, event domain.Event) (domain.Order, error) {
 	switch event.(type) {
 	case domain.CofirmPayment, domain.ConfirmStock:
-		return repository.PersistOrder(ctx, orderID, event)
+		order, err := repository.PersistOrder(ctx, orderID, event)
+		if err != nil {
+			return nil, err
+		}
+
+		switch order.(type) {
+		case domain.CompletedOrder:
+			err = eventhandler.ProduceComplete(ctx, order)
+		}
+		return order, err
 	case domain.RejectPayment, domain.RejectStock:
 		order, err := repository.PersistOrder(ctx, orderID, event)
 		if err != nil {

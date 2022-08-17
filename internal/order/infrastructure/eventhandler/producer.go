@@ -48,3 +48,19 @@ func ProduceRollback(ctx context.Context, order domain.Order) error {
 		panic(`bug: invalid state for rollback`)
 	}
 }
+
+func ProduceComplete(ctx context.Context, order domain.Order) error {
+	switch order := order.(type) {
+	case domain.CompletedOrder:
+		_, err := client.XAdd(ctx, &redis.XAddArgs{
+			Stream: OrderStream,
+			Values: schema.OrderEvent{
+				Event:   schema.Event{Type: schema.CompleteOrder},
+				OrderID: order.GetID(),
+			},
+		}).Result()
+		return err
+	default:
+		panic(`bug: invalid state for rollback`)
+	}
+}

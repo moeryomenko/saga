@@ -21,6 +21,7 @@ type EventType string
 const (
 	NewOrder          EventType = `new_order`
 	CancelOrder       EventType = `cancale_order`
+	CompleteOrder     EventType = `complete_order`
 	PaymentsConfirmed EventType = `payments_confirmed`
 	PaymentsFailed    EventType = `paymants_failed`
 	StockConfirmed    EventType = `stock_confirmed`

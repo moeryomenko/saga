@@ -79,36 +79,46 @@ func HandleEvents(eventHandler EventHandler) func(ctx context.Context) error {
 				}
 
 				for _, msg := range events[0].Messages {
-					event, err := schema.ToOrderEvent(msg.Values)
-					if err != nil {
-						log.Println(err)
-						_, _ = client.XAck(ctx, OrderStream, StockGroup, msg.ID).Result()
-						continue
-					}
-
-					stock, err := eventHandler(domain.StockOrder{
-						OrderID: event.OrderID,
-						Items:   mapItemsFromEvent(event.Items),
-					})
-					if err != nil {
-						log.Println(err)
-						_, _ = client.XAck(ctx, OrderStream, StockGroup, msg.ID).Result()
-						continue
-					}
-
-					err = ProcudeConfimation(ctx, stock)
+					err = handleMessage(ctx, msg, eventHandler)
 					if err != nil {
 						log.Println(err)
 					}
-
-					_, err = client.XAck(ctx, OrderStream, StockGroup, msg.ID).Result()
-					if err != nil {
-						log.Println(err)
-					}
+					_, _ = client.XAck(ctx, OrderStream, StockGroup, msg.ID).Result()
 				}
 			}
 		}
 	}
+}
+
+func handleMessage(ctx context.Context, msg redis.XMessage, eventHandler EventHandler) error {
+	event, err := schema.ToOrderEvent(msg.Values)
+	if err != nil {
+		return err
+	}
+
+	// skip completed and canceled orders.
+	if event.Type == schema.CompleteOrder || event.Type == schema.CancelOrder {
+		return nil
+	}
+
+	stock, err := eventHandler(domain.StockOrder{
+		OrderID: event.OrderID,
+		Items:   mapItemsFromEvent(event.Items),
+	})
+	if err != nil {
+		return err
+	}
+
+	err = ProcudeConfimation(ctx, stock)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.XAck(ctx, OrderStream, StockGroup, msg.ID).Result()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func mapItemsFromEvent(items string) []string {
