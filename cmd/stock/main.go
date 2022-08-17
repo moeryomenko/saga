@@ -10,6 +10,7 @@ import (
 
 	"github.com/moeryomenko/saga/internal/stock/config"
 	"github.com/moeryomenko/saga/internal/stock/infrastructure/eventhandler"
+	"github.com/moeryomenko/saga/internal/stock/service"
 )
 
 func main() {
@@ -36,7 +37,7 @@ func main() {
 		healing.WithReadyEndpoint(cfg.Health.ReadyEndpoint),
 	)
 
-	group.Run(eventhandler.HandleEvents)
+	group.Run(eventhandler.HandleEvents(service.HandleEvent))
 	group.RunGracefully(health.Heartbeat, health.Stop)
 
 	errs := group.Wait()

@@ -67,7 +67,7 @@ func HandleEvents(handler EventHandler) func(context.Context) error {
 				events, err := client.XReadGroup(ctx, &redis.XReadGroupArgs{
 					Group:    OrderGroup,
 					Consumer: uuid.NewString(),
-					Streams:  []string{OrderGroup, `>`},
+					Streams:  []string{OrderStream, `>`},
 					Block:    0,
 					Count:    1,
 					NoAck:    false,

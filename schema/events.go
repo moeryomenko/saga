@@ -20,6 +20,7 @@ type EventType string
 
 const (
 	NewOrder          EventType = `new_order`
+	CancelOrder       EventType = `cancale_order`
 	PaymentsConfirmed EventType = `payments_confirmed`
 	PaymentsFailed    EventType = `paymants_failed`
 	StockConfirmed    EventType = `stock_confirmed`
@@ -31,7 +32,7 @@ type OrderEvent struct {
 	OrderID    uuid.UUID       `json:"order_id"`
 	CustomerID uuid.UUID       `json:"customer_id"`
 	Price      decimal.Decimal `json:"price"`
-	Items      []string        `json:"items"`
+	Items      string          `json:"items"`
 }
 
 func (e OrderEvent) Map() map[string]string {
@@ -122,6 +123,6 @@ func ToStockEvent(values map[string]any) (StockEvent, error) {
 	return o, err
 }
 
-func (e StockEvent) SetType(kind EventType) {
+func (e *StockEvent) SetType(kind EventType) {
 	e.Type = kind
 }
