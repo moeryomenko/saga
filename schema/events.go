@@ -8,8 +8,8 @@ import (
 )
 
 func GetEventType(data map[string]any) EventType {
-	kind := data[`type`].(string)
-	return EventType(kind)
+	kind := data[`type`].(EventType)
+	return kind
 }
 
 type Event struct {

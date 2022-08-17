@@ -67,7 +67,7 @@ func HandleEvents(handler EventHandler) func(context.Context) error {
 				events, err := client.XReadGroup(ctx, &redis.XReadGroupArgs{
 					Group:    OrderGroup,
 					Consumer: uuid.NewString(),
-					Streams:  []string{OrderStream, `>`},
+					Streams:  []string{ConfirmStream, `>`},
 					Block:    0,
 					Count:    1,
 					NoAck:    false,
@@ -78,11 +78,10 @@ func HandleEvents(handler EventHandler) func(context.Context) error {
 				}
 
 				for _, msg := range events[0].Messages {
-					id := msg.ID
 					orderID, event, err := mapToDomainEvent(msg.Values)
 					if err != nil {
 						log.Println(err)
-						_, _ = client.XAck(ctx, ConfirmStream, OrderGroup, id).Result()
+						_, _ = client.XAck(ctx, ConfirmStream, OrderGroup, msg.ID).Result()
 						continue
 					}
 
@@ -91,7 +90,7 @@ func HandleEvents(handler EventHandler) func(context.Context) error {
 						log.Println(err)
 					}
 
-					_, err = client.XAck(ctx, ConfirmStream, OrderGroup, id).Result()
+					_, err = client.XAck(ctx, ConfirmStream, OrderGroup, msg.ID).Result()
 					if err != nil {
 						log.Println(err)
 					}
