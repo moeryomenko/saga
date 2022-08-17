@@ -39,7 +39,7 @@ func main() {
 		healing.WithReadyEndpoint(cfg.Health.ReadyEndpoint),
 	)
 
-	group.Run(eventhandler.HandlerEvents(service.HandleEvent))
+	group.Run(eventhandler.HandleEvents(service.HandleEvent))
 	group.RunGracefully(health.Heartbeat, health.Stop)
 	group.RunGracefully(squad.RunServer(api.New(cfg)))
 

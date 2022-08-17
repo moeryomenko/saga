@@ -36,7 +36,7 @@ func main() {
 		healing.WithReadyEndpoint(cfg.Health.ReadyEndpoint),
 	)
 
-	group.Run(eventhandler.HandlerEvents)
+	group.Run(eventhandler.HandleEvents)
 	group.RunGracefully(health.Heartbeat, health.Stop)
 
 	errs := group.Wait()

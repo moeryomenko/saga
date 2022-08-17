@@ -21,6 +21,6 @@ func Close(_ context.Context) error {
 	return client.Close()
 }
 
-func HandlerEvents(_ context.Context) error {
+func HandleEvents(_ context.Context) error {
 	return nil
 }

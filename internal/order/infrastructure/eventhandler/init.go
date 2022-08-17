@@ -23,6 +23,8 @@ func Close(_ context.Context) error {
 	return client.Close()
 }
 
-func HandlerEvents(handler func(context.Context, uuid.UUID, domain.Event) (domain.Order, error)) func(context.Context) error {
+type EventHandler func(context.Context, uuid.UUID, domain.Event) (domain.Order, error)
+
+func HandleEvents(handler EventHandler) func(context.Context) error {
 	return nil
 }
