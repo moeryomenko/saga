@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/moeryomenko/saga/internal/order/domain"
+	"github.com/moeryomenko/saga/internal/order/infrastructure/eventhandler"
 	"github.com/moeryomenko/saga/internal/order/infrastructure/repository"
 )
 
@@ -15,9 +16,12 @@ func HandleEvent(ctx context.Context, orderID uuid.UUID, event domain.Event) (do
 	case domain.RejectStock:
 		// TODO rollback saga transaction.
 	case domain.Process:
-		// TODO: add beginning of saga transaction.
-		// Send event to stream.
-		return repository.PersistOrder(ctx, orderID, event)
+		order, err := repository.PersistOrder(ctx, orderID, event)
+		if err != nil {
+			return nil, err
+		}
+
+		return order, eventhandler.ProduceOrder(ctx, order)
 	default:
 		return repository.PersistOrder(ctx, orderID, event)
 	}
