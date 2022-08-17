@@ -23,11 +23,7 @@ const (
 func Init(cfg *config.Config) func(context.Context) error {
 	return func(ctx context.Context) error {
 		client = redis.NewClient(&redis.Options{Addr: cfg.Stream.Addr()})
-		err := client.Ping(ctx).Err()
-		if err != nil {
-			return err
-		}
-		return initStreams(ctx)
+		return client.Ping(ctx).Err()
 	}
 }
 
@@ -59,6 +55,12 @@ type EventHandler func(context.Context, uuid.UUID, domain.Event) (domain.Order, 
 
 func HandleEvents(handler EventHandler) func(context.Context) error {
 	return func(ctx context.Context) error {
+		defer func() {
+			log.Printf(`close event handler`)
+		}()
+		for initStreams(ctx) != nil {
+		}
+
 		for {
 			select {
 			case <-ctx.Done():
