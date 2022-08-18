@@ -11,17 +11,22 @@ type Balance struct {
 	Reserved   decimal.Decimal
 }
 
-func (b Balance) Apply(payment Payment) (Balance, error) {
+func (b Balance) Apply(payment Payment) (balance Balance, err error) {
 	switch payment := payment.(type) {
 	case NewPayment:
-		return b.ReserveAmount(payment)
+		balance, err = b.ReserveAmount(payment)
+		if err != nil {
+			return b, err
+		}
 	case CompletedPayment:
-		return b.CompletePayment(payment), nil
+		balance = b.CompletePayment(payment)
 	case CanceledPayment:
-		return b.Refund(payment), nil
+		balance = b.Refund(payment)
 	default:
 		panic(`bug: invalid payment`)
 	}
+	balance.CustomerID = b.CustomerID
+	return balance, nil
 }
 
 func (b Balance) ReserveAmount(payment Payment) (Balance, error) {

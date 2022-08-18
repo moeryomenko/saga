@@ -5,10 +5,13 @@ package repository
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/log/zerologadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/rs/zerolog"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 
@@ -18,6 +21,9 @@ import (
 func TestIntegration_SelectQuery(t *testing.T) {
 	config, err := pgxpool.ParseConfig(`user=test password=pass host=localhost port=5432 dbname=orders pool_max_conns=1`)
 	require.NoError(t, err)
+
+	zlog := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr})
+	config.ConnConfig.Logger = zerologadapter.NewLogger(zlog)
 
 	pool, err = pgxpool.ConnectConfig(context.Background(), config)
 	require.NoError(t, err)

@@ -16,7 +16,7 @@ import (
 func main() {
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, `load .env file: %s`, err)
+		fmt.Fprintf(os.Stderr, `load env vars: %s`, err)
 		os.Exit(1)
 	}
 
