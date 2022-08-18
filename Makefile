@@ -3,7 +3,7 @@ COVER_FILE ?= coverage.out
 
 # Database related variables.
 PG_USER ?= test
-PG_DBS ?= orders 
+PG_DBS ?= "orders,payments"
 PG_PASS ?= pass
 
 # Tools
