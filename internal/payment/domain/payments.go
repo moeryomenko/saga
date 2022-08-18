@@ -10,6 +10,11 @@ type Payment interface {
 	GetAmount() decimal.Decimal
 }
 
+type ResultPayment interface {
+	Payment
+	GetOrderID() uuid.UUID
+}
+
 type NewPayment struct {
 	ID      uuid.UUID
 	OrderID uuid.UUID
@@ -22,6 +27,10 @@ func (p NewPayment) GetID() uuid.UUID {
 
 func (p NewPayment) GetAmount() decimal.Decimal {
 	return p.Amount
+}
+
+func (p NewPayment) GetOrderID() uuid.UUID {
+	return p.OrderID
 }
 
 type CompletedPayment struct {
@@ -38,8 +47,9 @@ func (p CompletedPayment) GetAmount() decimal.Decimal {
 }
 
 type CanceledPayment struct {
-	ID     uuid.UUID
-	Amount decimal.Decimal
+	OrderID uuid.UUID
+	ID      uuid.UUID
+	Amount  decimal.Decimal
 }
 
 func (p CanceledPayment) GetID() uuid.UUID {
@@ -48,6 +58,10 @@ func (p CanceledPayment) GetID() uuid.UUID {
 
 func (p CanceledPayment) GetAmount() decimal.Decimal {
 	return p.Amount
+}
+
+func (p CanceledPayment) GetOrderID() uuid.UUID {
+	return p.OrderID
 }
 
 func CompletePayment(payment Payment) (Payment, error) {
@@ -66,8 +80,9 @@ func CancelPayment(payment Payment) (Payment, error) {
 	switch payment := payment.(type) {
 	case NewPayment:
 		return CanceledPayment{
-			ID:     payment.ID,
-			Amount: payment.Amount,
+			OrderID: payment.OrderID,
+			ID:      payment.ID,
+			Amount:  payment.Amount,
 		}, nil
 	default:
 		return nil, ErrCompletedPayment

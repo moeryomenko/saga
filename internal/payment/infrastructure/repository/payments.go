@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
@@ -25,6 +26,8 @@ func PersistTransaction(ctx context.Context, customerID uuid.UUID, event domain.
 		default:
 			return errors.MarkAndWrapError(err, ErrInfrastructure, `couldn't find payment`)
 		}
+
+		log.Println(payment)
 
 		balance, payment, err = balance.Transaction(domain.Tx{
 			Payment: payment,

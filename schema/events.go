@@ -33,6 +33,7 @@ type OrderEvent struct {
 	OrderID    uuid.UUID       `json:"order_id"`
 	CustomerID uuid.UUID       `json:"customer_id"`
 	Price      decimal.Decimal `json:"price"`
+	PaymentID  uuid.UUID       `json:"payment_id,omitempty"`
 	Items      string          `json:"items"`
 }
 
@@ -98,7 +99,7 @@ func ToPaymentsEvent(values map[string]any) (PaymentsEvent, error) {
 	return o, err
 }
 
-func (e PaymentsEvent) SetType(kind EventType) {
+func (e *PaymentsEvent) SetType(kind EventType) {
 	e.Type = kind
 }
 

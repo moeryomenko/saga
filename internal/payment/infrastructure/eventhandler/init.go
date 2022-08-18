@@ -46,7 +46,3 @@ func initConsumerGroup(ctx context.Context) error {
 func Close(_ context.Context) error {
 	return client.Close()
 }
-
-func HandleEvents() func(ctx context.Context) error {
-	return nil
-}

@@ -26,7 +26,7 @@ type Config struct {
 
 // HealthConfig represents health controller configuration.
 type HealthConfig struct {
-	Port          int           `envconfig:"PORT" default:"6061"`
+	Port          int           `envconfig:"PORT" default:"6062"`
 	LiveEndpoint  string        `envconfig:"LIVINESS_ENDPOINT" default:"/livez"`
 	ReadyEndpoint string        `envconfig:"READINESS_ENDPOINT" default:"/ready"`
 	Period        time.Duration `envconfig:"PERIOD" default:"3s"`
