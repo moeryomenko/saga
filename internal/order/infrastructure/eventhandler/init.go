@@ -55,9 +55,6 @@ type EventHandler func(context.Context, uuid.UUID, domain.Event) (domain.Order, 
 
 func HandleEvents(handler EventHandler) func(context.Context) error {
 	return func(ctx context.Context) error {
-		defer func() {
-			log.Printf(`close event handler`)
-		}()
 		for initStreams(ctx) != nil {
 		}
 

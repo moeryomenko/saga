@@ -17,9 +17,8 @@ func HandleEvent(ctx context.Context, orderID uuid.UUID, event domain.Event) (do
 			return nil, err
 		}
 
-		switch order.(type) {
-		case domain.CompletedOrder:
-			err = eventhandler.ProduceComplete(ctx, order)
+		if order, ok := order.(domain.CompletedOrder); ok {
+			err = eventhandler.Produce(ctx, order)
 		}
 		return order, err
 	case domain.RejectPayment, domain.RejectStock:
@@ -28,14 +27,14 @@ func HandleEvent(ctx context.Context, orderID uuid.UUID, event domain.Event) (do
 			return nil, err
 		}
 
-		return order, eventhandler.ProduceRollback(ctx, order)
+		return order, eventhandler.Produce(ctx, order)
 	case domain.Process:
 		order, err := repository.PersistOrder(ctx, orderID, event)
 		if err != nil {
 			return nil, err
 		}
 
-		return order, eventhandler.ProduceOrder(ctx, order)
+		return order, eventhandler.Produce(ctx, order)
 	default:
 		return repository.PersistOrder(ctx, orderID, event)
 	}
