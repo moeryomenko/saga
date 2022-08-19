@@ -1,4 +1,4 @@
-CREATE TYPE payment_status AS ENUM ('new', 'completed', 'canceled');
+CREATE TYPE payment_status AS ENUM ('new', 'failed', 'completed', 'canceled');
 
 CREATE TABLE IF NOT EXISTS balances (
 	customer_id      UUID UNIQUE NOT NULL,

@@ -9,6 +9,7 @@ import (
 
 const (
 	statusNew       = `new`
+	statusFailed    = `failed`
 	statusCompleted = `completed`
 	statusCanceled  = `canceled`
 )
@@ -31,6 +32,12 @@ func mapPaymentToDomain(p *Payment) domain.Payment {
 	switch p.Status {
 	case statusNew:
 		return domain.NewPayment{
+			ID:      p.PaymentID.Bytes,
+			OrderID: p.OrderID.Bytes,
+			Amount:  p.Amount,
+		}
+	case statusFailed:
+		return domain.FailedPayment{
 			ID:      p.PaymentID.Bytes,
 			OrderID: p.OrderID.Bytes,
 			Amount:  p.Amount,
@@ -67,6 +74,14 @@ func mapPaymentToModel(customerID uuid.UUID, p domain.Payment) Payment {
 			CustomerID: pgtype.UUID{Bytes: customerID, Status: pgtype.Present},
 			Amount:     p.Amount,
 			Status:     status,
+		}
+	case domain.FailedPayment:
+		return Payment{
+			PaymentID:  pgtype.UUID{Bytes: p.ID, Status: pgtype.Present},
+			OrderID:    pgtype.UUID{Bytes: p.OrderID, Status: pgtype.Present},
+			CustomerID: pgtype.UUID{Bytes: customerID, Status: pgtype.Present},
+			Amount:     p.Amount,
+			Status:     statusFailed,
 		}
 	case domain.CompletedPayment:
 		status = statusCompleted

@@ -12,9 +12,12 @@ func (b Balance) Transaction(tx Tx) (Balance, Payment, error) {
 	}
 
 	balance, err := b.Apply(payment)
-	if err != nil {
+	switch err {
+	case nil:
+		return balance, payment, nil
+	case ErrInsufficientFunds:
+		return b, FailPayment(payment), nil
+	default:
 		return b, nil, err
 	}
-
-	return balance, payment, nil
 }

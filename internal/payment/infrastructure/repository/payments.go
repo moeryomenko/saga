@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"log"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
@@ -26,8 +25,6 @@ func PersistTransaction(ctx context.Context, customerID uuid.UUID, event domain.
 		default:
 			return errors.MarkAndWrapError(err, ErrInfrastructure, `couldn't find payment`)
 		}
-
-		log.Println(payment)
 
 		balance, payment, err = balance.Transaction(domain.Tx{
 			Payment: payment,
@@ -82,7 +79,7 @@ func findPaymentByID(ctx context.Context, tx pgx.Tx, paymentID uuid.UUID) (domai
 func savePayment(ctx context.Context, tx pgx.Tx, customerID uuid.UUID, payment domain.Payment) error {
 	model := mapPaymentToModel(customerID, payment)
 	switch model.Status {
-	case statusNew:
+	case statusNew, statusFailed:
 		_, err := tx.Exec(ctx, insertPaymentQuery, model.PaymentID, model.Status, model.CustomerID, model.OrderID, model.Amount)
 		return err
 	default:

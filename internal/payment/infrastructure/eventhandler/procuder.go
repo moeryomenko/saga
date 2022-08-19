@@ -17,7 +17,7 @@ func Produce(ctx context.Context, orderID uuid.UUID, payment domain.Payment) err
 	switch payment.(type) {
 	case domain.NewPayment:
 		event.SetType(schema.PaymentsConfirmed)
-	case domain.CanceledPayment:
+	case domain.FailedPayment:
 		event.SetType(schema.PaymentsFailed)
 	}
 	_, err := client.XAdd(ctx, &redis.XAddArgs{

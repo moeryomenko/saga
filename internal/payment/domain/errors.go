@@ -7,5 +7,5 @@ var (
 
 	ErrInsufficientFunds = errors.New(`insufficient funds to pay`)
 	ErrCanceledPayment   = errors.New(`compelete canceled payment`)
-	ErrCompletedPayment  = errors.New(`cancel completed payment`)
+	ErrFailedPayment     = errors.New(`cancel failed payment`)
 )

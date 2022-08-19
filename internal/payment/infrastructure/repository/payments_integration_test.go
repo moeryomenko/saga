@@ -144,15 +144,15 @@ func negativePayments(ctx context.Context, t *testing.T) {
 				Amount:   decimal.NewFromInt32(40),
 				Reserved: decimal.Zero,
 			},
-			expectedError: domain.ErrInsufficientFunds,
 		},
 		`cancel completed payments`: {
 			orderID: uuid.New(),
 			customer: func() (uuid.UUID, error) {
 				customerID := uuid.New()
 				available := decimal.NewFromInt32(40)
+				reserved := decimal.NewFromInt32(20)
 				err := pool.BeginTxFunc(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) error {
-					_, err := tx.Exec(ctx, `INSERT INTO balances(customer_id, available_amount) VALUES ($1, $2)`, customerID, available)
+					_, err := tx.Exec(ctx, `INSERT INTO balances(customer_id, available_amount, reserved_amount) VALUES ($1, $2, $3)`, customerID, available, reserved)
 					return err
 				})
 				return customerID, err
@@ -169,10 +169,9 @@ func negativePayments(ctx context.Context, t *testing.T) {
 				return domain.Cancel{PaymentID: paymentID}
 			},
 			expectedBalance: domain.Balance{
-				Amount:   decimal.NewFromInt32(40),
+				Amount:   decimal.NewFromInt32(60),
 				Reserved: decimal.Zero,
 			},
-			expectedError: domain.ErrCompletedPayment,
 		},
 		`complete canceled payments`: {
 			orderID: uuid.New(),
@@ -189,6 +188,34 @@ func negativePayments(ctx context.Context, t *testing.T) {
 				paymentID := uuid.New()
 				err := pool.BeginTxFunc(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) error {
 					_, err := tx.Exec(ctx, insertPaymentQuery, paymentID, statusCanceled, customerID, orderID, decimal.NewFromInt32(20))
+					return err
+				})
+				return paymentID, err
+			},
+			event: func(_, paymentID uuid.UUID) domain.Event {
+				return domain.Complete{PaymentID: paymentID}
+			},
+			expectedBalance: domain.Balance{
+				Amount:   decimal.NewFromInt32(40),
+				Reserved: decimal.Zero,
+			},
+			expectedError: domain.ErrCanceledPayment,
+		},
+		`complete failed payments`: {
+			orderID: uuid.New(),
+			customer: func() (uuid.UUID, error) {
+				customerID := uuid.New()
+				available := decimal.NewFromInt32(40)
+				err := pool.BeginTxFunc(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) error {
+					_, err := tx.Exec(ctx, `INSERT INTO balances(customer_id, available_amount) VALUES ($1, $2)`, customerID, available)
+					return err
+				})
+				return customerID, err
+			},
+			preparePayment: func(customerID, orderID uuid.UUID) (uuid.UUID, error) {
+				paymentID := uuid.New()
+				err := pool.BeginTxFunc(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) error {
+					_, err := tx.Exec(ctx, insertPaymentQuery, paymentID, statusFailed, customerID, orderID, decimal.NewFromInt32(60))
 					return err
 				})
 				return paymentID, err
@@ -219,7 +246,9 @@ func negativePayments(ctx context.Context, t *testing.T) {
 			require.NoError(t, err)
 
 			_, err = PersistTransaction(ctx, customerID, tc.event(tc.orderID, paymentID))
-			require.ErrorIs(t, err, tc.expectedError)
+			if tc.expectedError != nil {
+				require.ErrorIs(t, err, tc.expectedError)
+			}
 			checkBalance(ctx, t, customerID, tc.expectedBalance)
 		})
 	}
