@@ -18,6 +18,7 @@ func HandleEvents(handler EventHandler) func(context.Context) error {
 		for initStreams(ctx) != nil {
 		}
 
+		consumerID := uuid.New().String()
 		for {
 			select {
 			case <-ctx.Done():
@@ -25,7 +26,7 @@ func HandleEvents(handler EventHandler) func(context.Context) error {
 			default:
 				events, err := client.XReadGroup(ctx, &redis.XReadGroupArgs{
 					Group:    OrderGroup,
-					Consumer: uuid.NewString(),
+					Consumer: consumerID,
 					Streams:  []string{ConfirmStream, `>`},
 					Block:    0,
 					Count:    1,
