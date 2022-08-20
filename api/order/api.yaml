@@ -47,8 +47,12 @@ paths:
               $ref: '#/components/schemas/Item'
         required: true
       responses:
-        204:
-          description: Item added to order
+        200:
+          description: Sussessfully add item to order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
         412:
           description: Order unable to changes
           content:
@@ -108,8 +112,12 @@ paths:
               $ref: '#/components/schemas/Item'
         required: true
       responses:
-        204:
-          description: Item removed from order
+        200:
+          description: Sussessfully remove item from order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
         412:
           description: Order unable to changes
           content:

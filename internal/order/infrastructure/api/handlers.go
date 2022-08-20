@@ -27,43 +27,34 @@ func (RestController) PostOrder(w http.ResponseWriter, r *http.Request) {
 	var createOrder CreateOrder
 	handlerDecorator(w, r, WithRequestBody(&createOrder), WithOperation(func(ctx context.Context) (any, error) {
 		orderID := uuid.New()
-
-		order, err := service.HandleEvent(ctx, orderID, domain.CreateOrder{
+		return service.HandleEvent(ctx, orderID, domain.CreateOrder{
 			OrderID:    orderID,
 			CustomerID: *createOrder.CustomerId,
 		})
-		if err != nil {
-			return nil, err
-		}
-
-		return mapOrder(order), nil
-	}), WithDefaultStatus(http.StatusCreated))
+	}), WithResponseMapper(mapOrder), WithDefaultStatus(http.StatusCreated))
 }
 
 func (RestController) PostOrderOrderID(w http.ResponseWriter, r *http.Request, orderID openapi_types.UUID) {
 	handlerDecorator(w, r, WithOperation(func(ctx context.Context) (any, error) {
-		_, err := service.HandleEvent(ctx, orderID, domain.Process{})
-		return nil, err
-	}), WithErrorMapper(mapDomainError))
+		return service.HandleEvent(ctx, orderID, domain.Process{})
+	}), WithResponseMapper(mapOrder), WithErrorMapper(mapDomainError))
 }
 
 func (RestController) PutOrderOrderID(w http.ResponseWriter, r *http.Request, orderID openapi_types.UUID) {
 	var item Item
 	handlerDecorator(w, r, WithRequestBody(&item), WithOperation(func(ctx context.Context) (any, error) {
-		_, err := service.HandleEvent(ctx, orderID, domain.AddItem{
+		return service.HandleEvent(ctx, orderID, domain.AddItem{
 			Item: *item.Name,
 		})
-		return nil, err
-	}), WithDefaultStatus(http.StatusNoContent), WithErrorMapper(mapDomainError))
+	}), WithResponseMapper(mapOrder), WithErrorMapper(mapDomainError))
 }
 
 func (RestController) DeleteOrderOrderIDItem(w http.ResponseWriter, r *http.Request, orderID openapi_types.UUID, item string) {
 	handlerDecorator(w, r, WithOperation(func(ctx context.Context) (any, error) {
-		_, err := service.HandleEvent(ctx, orderID, domain.RemoveItem{
+		return service.HandleEvent(ctx, orderID, domain.RemoveItem{
 			Item: item,
 		})
-		return nil, err
-	}), WithErrorMapper(mapDomainError))
+	}), WithResponseMapper(mapOrder), WithErrorMapper(mapDomainError))
 }
 
 func mapDomainError(err error) int {

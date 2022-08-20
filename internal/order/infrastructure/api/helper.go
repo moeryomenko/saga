@@ -8,14 +8,20 @@ import (
 )
 
 type HandlerDecorator struct {
-	errMapper   func(error) int
-	requestBody Validated
-	onSuccess   int
-	operation   func(context.Context) (any, error)
-	mutation    bool
+	errMapper      func(error) int
+	requestBody    Validated
+	onSuccess      int
+	operation      func(context.Context) (any, error)
+	responseMapper func(any) any
 }
 
 type Option func(*HandlerDecorator)
+
+func WithResponseMapper(mapper func(any) any) Option {
+	return func(hd *HandlerDecorator) {
+		hd.responseMapper = mapper
+	}
+}
 
 func WithDefaultStatus(status int) Option {
 	return func(hd *HandlerDecorator) {
@@ -32,7 +38,6 @@ func WithErrorMapper(mapper func(error) int) Option {
 func WithRequestBody(request Validated) Option {
 	return func(hd *HandlerDecorator) {
 		hd.requestBody = request
-		hd.mutation = true
 	}
 }
 
@@ -52,7 +57,7 @@ func handlerDecorator(w http.ResponseWriter, r *http.Request, opts ...Option) {
 
 	ctx := r.Context()
 
-	if decorator.mutation {
+	if decorator.requestBody != nil {
 		defer func() { _ = r.Body.Close() }()
 
 		var body []byte
@@ -78,7 +83,7 @@ func handlerDecorator(w http.ResponseWriter, r *http.Request, opts ...Option) {
 	resp, err := decorator.operation(ctx)
 	switch err {
 	case nil:
-		apiSuccess(ctx, w, decorator.onSuccess, resp)
+		apiSuccess(ctx, w, decorator.onSuccess, decorator.responseMapper(resp))
 	default:
 		status := http.StatusInternalServerError
 		if decorator.errMapper != nil {

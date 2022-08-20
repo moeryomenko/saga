@@ -92,11 +92,7 @@ func CompletePayment(payment Payment) (Payment, error) {
 func FailPayment(payment Payment) FailedPayment {
 	switch payment := payment.(type) {
 	case NewPayment:
-		return FailedPayment{
-			ID:      payment.ID,
-			OrderID: payment.OrderID,
-			Amount:  payment.Amount,
-		}
+		return FailedPayment(payment)
 	default:
 		panic(`bug: invalid failing payment flow`)
 	}

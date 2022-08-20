@@ -313,17 +313,17 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+yVTW/bMAyG/4rA7WjUadddfOvWHXJqsR2HYlAtplVhfYyiMgSB//sg2knTxd2CovvA",
-	"0FNkmaZevnzErKENLgaPnhM0a0jtLToty/eEmvGCDFJ5jBQiEluUl21OHBzSF2vK4yKQ0wwN5GwNVMCr",
-	"iNBAYrL+Bvp+uxOu77Bl6Cv4QBQmEmPZlpVldLL4Idk2lybSq+nkc0a3n9trhxMJpxI8S9kVHBq2KfXQ",
-	"miuIeuXQ81P9L1vWL4IUFTzrlqFZlzjLXQkUA5JKSEvbojq7nEMFS6Rkg4cGjo9mR7OiI0T0Olpo4I1s",
-	"FWV8KzXUYWtiSCV9CSbNNvi5gQYuQ+LB5woIv2ZM/C6Y1UYSevlGx2hb+ai+S+XsDaRl9ZpwAQ28qu8p",
-	"rkeE611+pV6DqSUbeahAXqhi3Hi8JTTQMGXsy0aKwaeh6yez431R3dNUParnU04JU1rkrlupVrSrwcC+",
-	"grez2bMpGC7ehIK5ZySvu23TcYysIGXnNK2gGaeC8vhto66vxk7Xa/mZn/cH9PxiCBVeSDtkLLf+8xps",
-	"kVIYgmq8sBC2sQ/7VO1U/KsbcLXX09Py89ABOUgl9AaN4qAihRZTGq/g6fHJ72/CgGX2+rrDIqG91f4G",
-	"078FQduFNNKptDfi2I5fahxOojrmKQzyX6TgJ5PmiW7K382EmWWcHzpiJnAsaZU2I4zbYfDC4YbDM2OU",
-	"eHxvz8Q0qtclph/87ZBxn8dz2d9FUlr6p7CsJjPbQcLjaf8DugldWKJRCwruhfB9wj+KPwPkux5JFNJy",
-	"A2amDhqoob/qvwcAAP//p/TiENMLAAA=",
+	"H4sIAAAAAAAC/+xVwW7bMAz9FYPb0ajTrrv41q075NRiOw7FoNpMq8ISNZLOEAT+90Gyk6azswVF1+2Q",
+	"U2Safnp8fGTWUJEL5NGrQLkGqe7RmXT8yGgUr7hGjo+BKSCrxfSyakXJIX+zdXxcEDujUELb2hpy0FVA",
+	"KEGUrb+DrttG6PYBK4Uuh0/MNAGMMZxOVtGlwy9gWyzDbFbT4HNFN8b2xuEE4BTAi5Sdw6Fpm1IPrTmH",
+	"YFYOvT5X/xiyfkGpKPJqKoVyHfOsNjExCSCZIC9thdnF9RxyWCKLJQ8lnJ7MTmaRBwX0Jlgo4V0KRWZ6",
+	"n2ooaCsiSYSPyWzUkp/XUMI1ifY658D4vUXRD1SvNpTQp29MCLZKHxUPEu/emDSe3jIuoIQ3xaOLi8HC",
+	"xa5/U701SsU2aF9BepFF4YbrLWMNpXKLXQxIIC99189mp2NSzfNY7eXzpRVBkUXbNKusStyzXsAuh/ez",
+	"2Ysx6AdvgsHcK7I3zbbpOGTmIK1zhldQDlsh8/hjw67Lh04X6/Qzv+wO6PlVn5r8wsahYpz6r2uwkUr0",
+	"EOTDwAJtc5/2Kd+p+E8TcDPq6Xn8eapAuigT9DXWmVIWmCoUGUbw/PTs7zeht2XrzW2DkUJ1b/wdyv9l",
+	"gqohGdyZGV8nxXb0yobllFiHdsoG7T90wW82zTPVTH83E2LGdX7oipm98ooxdZ0lfkqPe+Zo8Y3FL8by",
+	"TCy6Yh1zun6TNKg4tvpliu+6PbnltRyfTyLbnsJ+2OPg7B0cRkdL7M2xYHLH6RlPz+c9GqUs5OXG9C03",
+	"UEIB3U33MwAA//88DVJRigwAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

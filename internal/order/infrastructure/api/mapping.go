@@ -2,7 +2,7 @@ package api
 
 import "github.com/moeryomenko/saga/internal/order/domain"
 
-func mapOrder(order domain.Order) Order {
+func mapOrder(order any) any {
 	switch order := order.(type) {
 	case domain.EmptyOrder:
 		return Order{

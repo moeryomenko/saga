@@ -65,6 +65,10 @@ func saveOrder(ctx context.Context, tx pgx.Tx, order domain.Order) error {
 
 const (
 	findOrderQuery   = `SELECT customer_id, items, price, payment_id, kind FROM orders WHERE order_id = $1 FOR UPDATE`
-	insertOrderQuery = `INSERT INTO orders(order_id, customer_id, items, price, payment_id, kind) VALUES ($1, $2, $3, $4, $5, $6)`
-	updateOrderQuery = `UPDATE orders SET customer_id = $2, items = $3, price = $4, payment_id = $5, kind = $6 WHERE order_id = $1`
+	insertOrderQuery = `
+	INSERT INTO orders(order_id, customer_id, items, price, payment_id, kind)
+	VALUES ($1, $2, $3, $4, $5, $6)
+	ON CONFLICT (order_id) DO UPDATE
+	SET kind='empty'::order_kind, items=EXCLUDED.items, updated_at=CURRENT_TIMESTAMP`
+	updateOrderQuery = `UPDATE orders SET customer_id = $2, items = $3, price = $4, payment_id = $5, kind = $6, updated_at = CURRENT_TIMESTAMP WHERE order_id = $1`
 )
