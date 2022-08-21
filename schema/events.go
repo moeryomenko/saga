@@ -8,8 +8,14 @@ import (
 )
 
 func GetEventType(data map[string]any) EventType {
-	kind := data[`type`].(EventType)
-	return kind
+	switch kind := data[`type`].(type) {
+	case string:
+		return EventType(kind)
+	case EventType:
+		return kind
+	default:
+		panic(`bug: invalid event type`)
+	}
 }
 
 type Event struct {

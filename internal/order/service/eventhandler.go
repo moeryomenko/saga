@@ -15,7 +15,7 @@ func HandleEvent(ctx context.Context, orderID uuid.UUID, event domain.Event) (do
 		return nil, err
 	}
 	switch event.(type) {
-	case domain.CofirmPayment, domain.ConfirmStock,
+	case domain.ConfirmPayment, domain.ConfirmStock,
 		domain.RejectPayment, domain.RejectStock,
 		domain.Process:
 		return order, eventhandler.Produce(ctx, order)

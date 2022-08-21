@@ -15,7 +15,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/moeryomenko/healing v1.14.0
 	github.com/moeryomenko/squad v1.9.0
-	github.com/rs/zerolog v1.15.0
+	github.com/rs/zerolog v1.27.0
 	github.com/shopspring/decimal v1.3.1
 	github.com/stretchr/testify v1.8.0
 )
@@ -45,6 +45,8 @@ require (
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/moeryomenko/synx v0.10.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

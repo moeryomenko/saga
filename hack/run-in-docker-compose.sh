@@ -5,7 +5,7 @@ RUN="${1:-}"
 
 # Run integration tests, example:
 set +e
-go test -tags "integration" ./... -v -p 1 -count 1 -run TestIntegration -coverprofile=coverage.out
+go test -tags "integration" ./... -v -p 1 -count 1 -run TestIntegration -coverpkg=./... -coverprofile=coverage.out
 result=$?
 set -e
 

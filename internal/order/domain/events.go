@@ -19,7 +19,7 @@ type RemoveItem struct {
 
 type Process struct{}
 
-type CofirmPayment struct {
+type ConfirmPayment struct {
 	PaymentID uuid.UUID
 }
 
@@ -42,7 +42,7 @@ func Apply(order Order, event Event) (Order, error) {
 		return RemoveItemFromOrder(order, event.Item)
 	case Process:
 		return CalculatePrice(order)
-	case CofirmPayment:
+	case ConfirmPayment:
 		return AttachPayments(order, event.PaymentID)
 	case ConfirmStock:
 		return StockOrder(order)

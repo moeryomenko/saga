@@ -73,6 +73,8 @@ func AttachPayments(order Order, paymentID uuid.UUID) (Order, error) {
 				PaymentID:    paymentID,
 			},
 		}, nil
+	case CanceledOrder:
+		return order, nil
 	default:
 		return nil, ErrPayOrder
 	}
@@ -89,6 +91,8 @@ func StockOrder(order Order) (Order, error) {
 		return CompletedOrder{
 			PaidOrder: order,
 		}, nil
+	case CanceledOrder:
+		return order, nil
 	default:
 		return nil, ErrStockOrder
 	}
@@ -97,6 +101,8 @@ func StockOrder(order Order) (Order, error) {
 // CancelOrder cancels order.
 func CancelOrder(order Order) (CanceledOrder, error) {
 	switch order := order.(type) {
+	case PendingOrder:
+		return CanceledOrder{PendingOrder: order}, nil
 	case PaidOrder:
 		return CanceledOrder{PendingOrder: order.PendingOrder}, nil
 	case StockedOrder:

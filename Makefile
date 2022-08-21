@@ -15,7 +15,7 @@ tools: ## Install all needed tools, e.g. for static checks
 # Main targets
 .PHONY: test
 test: ## Run unit tests
-	@go test -race ./... -coverprofile=$(COVER_FILE)
+	@go test -race ./... -coverpkg=./... -coverprofile=$(COVER_FILE)
 	@go tool cover -func=$(COVER_FILE) | grep ^total
 
 $(COVER_FILE):
@@ -39,6 +39,7 @@ gen: tools ## Generate projects files and components.
 
 .PHONY: deps
 deps: ## Manage go mod dependencies, beautify go.mod and go.sum files
+	@go-mod-upgrade
 	@go mod tidy
 
 .PHONY: clean

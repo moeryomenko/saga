@@ -25,7 +25,7 @@ func mapPaymentEventToDomain(event schema.PaymentsEvent, err error) (uuid.UUID, 
 
 	switch event.Type {
 	case schema.PaymentsConfirmed:
-		return event.OrderID, domain.CofirmPayment{PaymentID: event.PaymentsID}, nil
+		return event.OrderID, domain.ConfirmPayment{PaymentID: event.PaymentsID}, nil
 	case schema.PaymentsFailed:
 		return event.OrderID, domain.RejectPayment{}, nil
 	}
