@@ -40,6 +40,7 @@ func main() {
 	)
 
 	group.Run(eventhandler.HandleEvents(service.HandleEvent))
+	group.Run(service.Procuder(cfg.EventPollingPeriod))
 	group.RunGracefully(health.Heartbeat, health.Stop)
 	group.RunGracefully(squad.RunServer(api.New(cfg)))
 

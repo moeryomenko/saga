@@ -3,6 +3,7 @@ module github.com/moeryomenko/saga
 go 1.19
 
 require (
+	github.com/cenkalti/backoff/v4 v4.1.3
 	github.com/cockroachdb/errors v1.9.0
 	github.com/deepmap/oapi-codegen v1.11.0
 	github.com/getkin/kin-openapi v0.98.0

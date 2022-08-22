@@ -58,7 +58,11 @@ func GetEvent(ctx context.Context) (offset int, event schema.OrderEvent, err err
 	err = pool.AcquireFunc(ctx, func(conn *pgxpool.Conn) error {
 		return conn.QueryRow(ctx, selectEventFromLog).Scan(&offset, &payload, &eventType)
 	})
-	if err != nil {
+	switch err {
+	case nil:
+	case pgx.ErrNoRows:
+		return 0, schema.OrderEvent{}, ErrNoEvents
+	default:
 		return 0, schema.OrderEvent{}, errors.MarkAndWrapError(err, ErrInfrastructure, `couldn't get event`)
 	}
 	err = json.Unmarshal(payload.Bytes, &event)

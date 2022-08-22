@@ -22,6 +22,8 @@ type Config struct {
 	Host string `envconfig:"HOST"`
 	Port int    `envconfig:"PORT" default:"8080"`
 
+	EventPollingPeriod time.Duration `envconfig:"EVENT_POLLING_PERIOD" default:"200ms"`
+
 	Health HealthConfig `envconfig:"HEALTH"`
 
 	Stream   StreamConfig `envconfig:"STREAM"`
