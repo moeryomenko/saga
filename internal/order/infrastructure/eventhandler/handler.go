@@ -29,7 +29,7 @@ func HandleEvents(handler EventHandler) func(context.Context) error {
 					Consumer: consumerID,
 					Streams:  []string{ConfirmStream, `>`},
 					Block:    0,
-					Count:    1,
+					Count:    2,
 					NoAck:    false,
 				}).Result()
 				if err != nil {
