@@ -43,6 +43,10 @@ type OrderEvent struct {
 	Items      string          `json:"items"`
 }
 
+func (e *OrderEvent) SetType(kind EventType) {
+	e.Type = kind
+}
+
 func (e OrderEvent) Map() map[string]string {
 	var m map[string]string
 	in, _ := json.Marshal(e)

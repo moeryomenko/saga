@@ -27,7 +27,12 @@ func PersistOrder(ctx context.Context, orderID uuid.UUID, event domain.Event) (d
 			return errors.MarkAndWrapError(err, domain.ErrDomain, `couldn't apply event`)
 		}
 
-		return saveOrder(ctx, tx, order)
+		err = saveOrder(ctx, tx, order)
+		if err != nil {
+			return errors.MarkAndWrapError(err, ErrInfrastructure, `couldn't save order`)
+		}
+
+		return insertEvent(ctx, tx, order)
 	})
 	return order, err
 }
@@ -60,7 +65,7 @@ func saveOrder(ctx context.Context, tx pgx.Tx, order domain.Order) error {
 		query = updateOrderQuery
 	}
 	_, err = tx.Exec(ctx, query, model.OrderID, model.CustomerID, model.Items, model.Price, model.PaymentID, model.Kind)
-	return errors.MarkAndWrapError(err, ErrInfrastructure, `couldn't save order`)
+	return err
 }
 
 const (
