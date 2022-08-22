@@ -36,10 +36,15 @@ func PersistTransaction(ctx context.Context, customerID uuid.UUID, event domain.
 
 		err = saveBalance(ctx, tx, balance)
 		if err != nil {
-			return err
+			return errors.MarkAndWrapError(err, domain.ErrDomain, `couldn't update balance`)
 		}
 
-		return savePayment(ctx, tx, customerID, payment)
+		err = savePayment(ctx, tx, balance.CustomerID, payment)
+		if err != nil {
+			return errors.MarkAndWrapError(err, domain.ErrDomain, `couldn't update payment`)
+		}
+
+		return insertEvent(ctx, tx, payment)
 	})
 	return payment, err
 }

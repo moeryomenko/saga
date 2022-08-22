@@ -1,3 +1,6 @@
+//go:build integration
+// +build integration
+
 package repository
 
 import (
@@ -351,18 +354,16 @@ func TestIntegration_Repository(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
-			pool.BeginTxFunc(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) (err error) {
+			err := pool.BeginTxFunc(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) (err error) {
 				_, err = tx.Exec(ctx, `TRUNCATE event_log`)
 				require.NoError(t, err)
 				_, err = tx.Exec(ctx, `UPDATE event_offset SET offset_acked = 0`)
 				require.NoError(t, err)
 				return nil
 			})
+			require.NoError(t, err)
 
-			var (
-				order domain.Order
-				err   error
-			)
+			var order domain.Order
 			for _, event := range tc.getEvents(tc.orderID, tc.customerID) {
 				order, err = PersistOrder(context.Background(), tc.orderID, event)
 				require.NoError(t, err)

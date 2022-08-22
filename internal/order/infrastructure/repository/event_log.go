@@ -13,6 +13,40 @@ import (
 	"github.com/moeryomenko/saga/schema"
 )
 
+func GetEvent(ctx context.Context) (offset int, event schema.OrderEvent, err error) {
+	var (
+		payload   pgtype.JSONB
+		eventType schema.EventType
+	)
+	err = pool.AcquireFunc(ctx, func(conn *pgxpool.Conn) error {
+		return conn.QueryRow(ctx, selectEventFromLog).Scan(&offset, &payload, &eventType)
+	})
+	switch err {
+	case nil:
+	case pgx.ErrNoRows:
+		return 0, schema.OrderEvent{}, ErrNoEvents
+	default:
+		return 0, schema.OrderEvent{}, errors.MarkAndWrapError(err, ErrInfrastructure, `couldn't get event`)
+	}
+	err = json.Unmarshal(payload.Bytes, &event)
+	if err != nil {
+		return 0, schema.OrderEvent{}, errors.MarkAndWrapError(err, ErrInfrastructure, `invalid event payload`)
+	}
+	event.SetType(eventType)
+	return offset, event, nil
+}
+
+func Ack(ctx context.Context, id int) error {
+	err := pool.BeginTxFunc(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) (err error) {
+		_, err = tx.Exec(ctx, submitOffset, id)
+		return err
+	})
+	if err != nil {
+		return errors.MarkAndWrapError(err, ErrInfrastructure, `couldn't submit offset`)
+	}
+	return nil
+}
+
 func mapToEvent(order domain.Order) (schema.OrderEvent, bool) {
 	event := schema.OrderEvent{
 		OrderID:    order.GetID(),
@@ -46,43 +80,12 @@ func insertEvent(ctx context.Context, tx pgx.Tx, order domain.Order) error {
 		return nil
 	}
 	payload, err := json.Marshal(event)
+	if err != nil {
+		return errors.MarkAndWrapError(err, ErrInfrastructure, `invalid event type`)
+	}
 
 	_, err = tx.Exec(ctx, insertEventToLog, pgtype.JSONB{Bytes: payload, Status: pgtype.Present}, event.Type)
 	return errors.MarkAndWrapError(err, ErrInfrastructure, `couldn't insert event to log`)
-}
-
-func GetEvent(ctx context.Context) (offset int, event schema.OrderEvent, err error) {
-	var (
-		payload   pgtype.JSONB
-		eventType schema.EventType
-	)
-	err = pool.AcquireFunc(ctx, func(conn *pgxpool.Conn) error {
-		return conn.QueryRow(ctx, selectEventFromLog).Scan(&offset, &payload, &eventType)
-	})
-	switch err {
-	case nil:
-	case pgx.ErrNoRows:
-		return 0, schema.OrderEvent{}, ErrNoEvents
-	default:
-		return 0, schema.OrderEvent{}, errors.MarkAndWrapError(err, ErrInfrastructure, `couldn't get event`)
-	}
-	err = json.Unmarshal(payload.Bytes, &event)
-	if err != nil {
-		return 0, schema.OrderEvent{}, errors.MarkAndWrapError(err, ErrInfrastructure, `invalid event payload`)
-	}
-	event.SetType(eventType)
-	return offset, event, nil
-}
-
-func Ack(ctx context.Context, id int) error {
-	err := pool.BeginTxFunc(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) (err error) {
-		_, err = tx.Exec(ctx, submitOffset, id)
-		return err
-	})
-	if err != nil {
-		return errors.MarkAndWrapError(err, ErrInfrastructure, `couldn't submit offset`)
-	}
-	return nil
 }
 
 const (

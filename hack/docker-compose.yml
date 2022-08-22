@@ -19,8 +19,8 @@ services:
         read_only: true
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
-      interval: 10s
-      timeout: 5s
+      interval: 1s
+      timeout: 2s
       retries: 5
 
   order_migrations:

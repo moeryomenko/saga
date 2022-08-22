@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/moeryomenko/saga/internal/payment/domain"
+	"github.com/moeryomenko/saga/schema"
 )
 
 func TestIntegration_Payments(t *testing.T) {
@@ -44,6 +45,7 @@ func positivePayments(ctx context.Context, t *testing.T) {
 		finalEvent             func(uuid.UUID) domain.Event
 		expectedCreatedBalance domain.Balance
 		expectedFinalBalance   domain.Balance
+		expectedEvent          func(orderID, paymentID uuid.UUID) schema.PaymentsEvent
 	}{
 		`completed payments`: {
 			orderID: uuid.New(),
@@ -67,6 +69,9 @@ func positivePayments(ctx context.Context, t *testing.T) {
 			expectedFinalBalance: domain.Balance{
 				Amount:   decimal.NewFromInt32(80),
 				Reserved: decimal.Zero,
+			},
+			expectedEvent: func(orderID, paymentID uuid.UUID) schema.PaymentsEvent {
+				return schema.PaymentsEvent{Event: schema.Event{Type: schema.PaymentsConfirmed}, OrderID: orderID, PaymentsID: paymentID}
 			},
 		},
 		`canceled payments`: {
@@ -98,6 +103,16 @@ func positivePayments(ctx context.Context, t *testing.T) {
 	for name, tc := range testcases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			err := pool.BeginTxFunc(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) (err error) {
+				_, err = tx.Exec(ctx, `TRUNCATE event_log`)
+				require.NoError(t, err)
+				_, err = tx.Exec(ctx, `UPDATE event_offset SET offset_acked = 0`)
+				require.NoError(t, err)
+				return nil
+			})
+
+			require.NoError(t, err)
 			customerID, err := tc.customer()
 			require.NoError(t, err)
 			tc.expectedCreatedBalance.CustomerID = customerID
@@ -113,9 +128,17 @@ func positivePayments(ctx context.Context, t *testing.T) {
 
 			// complete payments.
 			event := tc.finalEvent(payment.GetID())
-			_, err = PersistTransaction(ctx, customerID, event)
+			payment, err = PersistTransaction(ctx, customerID, event)
 			require.NoError(t, err)
 			checkBalance(ctx, t, customerID, tc.expectedFinalBalance)
+
+			if tc.expectedEvent != nil {
+				id, event, err := GetEvent(ctx)
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedEvent(tc.orderID, payment.GetID()), event)
+				err = Ack(ctx, id)
+				require.NoError(t, err)
+			}
 		})
 	}
 }
@@ -128,6 +151,7 @@ func negativePayments(ctx context.Context, t *testing.T) {
 		event           func(uuid.UUID, uuid.UUID) domain.Event
 		expectedError   error
 		expectedBalance domain.Balance
+		expectedEvent   func(orderID uuid.UUID) schema.PaymentsEvent
 	}{
 		`insufficient funds`: {
 			orderID: uuid.New(),
@@ -146,6 +170,9 @@ func negativePayments(ctx context.Context, t *testing.T) {
 			expectedBalance: domain.Balance{
 				Amount:   decimal.NewFromInt32(40),
 				Reserved: decimal.Zero,
+			},
+			expectedEvent: func(orderID uuid.UUID) schema.PaymentsEvent {
+				return schema.PaymentsEvent{Event: schema.Event{Type: schema.PaymentsFailed}, OrderID: orderID}
 			},
 		},
 		`cancel completed payments`: {
@@ -237,6 +264,16 @@ func negativePayments(ctx context.Context, t *testing.T) {
 	for name, tc := range testcases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			err := pool.BeginTxFunc(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) (err error) {
+				_, err = tx.Exec(ctx, `TRUNCATE event_log`)
+				require.NoError(t, err)
+				_, err = tx.Exec(ctx, `UPDATE event_offset SET offset_acked = 0`)
+				require.NoError(t, err)
+				return nil
+			})
+			require.NoError(t, err)
+
 			customerID, err := tc.customer()
 			require.NoError(t, err)
 
@@ -253,6 +290,14 @@ func negativePayments(ctx context.Context, t *testing.T) {
 				require.ErrorIs(t, err, tc.expectedError)
 			}
 			checkBalance(ctx, t, customerID, tc.expectedBalance)
+
+			if tc.expectedEvent != nil {
+				id, event, err := GetEvent(ctx)
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedEvent(tc.orderID), event)
+				err = Ack(ctx, id)
+				require.NoError(t, err)
+			}
 		})
 	}
 }

@@ -39,6 +39,7 @@ func main() {
 	)
 
 	group.Run(eventhandler.HandleEvents(service.HandlePayments))
+	group.Run(service.Producer(cfg.EventPollingPeriod))
 	group.RunGracefully(health.Heartbeat, health.Stop)
 
 	errs := group.Wait()

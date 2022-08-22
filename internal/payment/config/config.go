@@ -19,6 +19,8 @@ func LoadConfig() (*Config, error) {
 
 // Config represents service configurations.
 type Config struct {
+	EventPollingPeriod time.Duration `envconfig:"EVENT_POLLING_PERIOD" default:"200ms"`
+
 	Health   HealthConfig `envconfig:"HEALTH"`
 	Stream   StreamConfig `envconfig:"STREAM"`
 	Database DBConfig     `envconfig:"DB"`
