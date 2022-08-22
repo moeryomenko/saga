@@ -14,15 +14,12 @@ tools: ## Install all needed tools, e.g. for static checks
 
 # Main targets
 .PHONY: test
-test: ## Run unit tests
-	@go test -race ./... -coverpkg=./... -coverprofile=$(COVER_FILE)
-	@go tool cover -func=$(COVER_FILE) | grep ^total
-
-$(COVER_FILE):
-	$(MAKE) test
+test: tools ## Run unit tests
+	@set -o pipefail && go test -json -count=1 -cover -race -coverpkg=./... ./... | tparse
 
 .PHONY: cover
-cover: $(COVER_FILE) ## Output coverage in human readable form in html
+cover: ## Output coverage in human readable form in html
+	@go test -race ./... -coverpkg=./... -coverprofile=$(COVER_FILE)
 	@go tool cover -html=$(COVER_FILE)
 	@rm -f $(COVER_FILE)
 
@@ -42,10 +39,6 @@ deps: ## Manage go mod dependencies, beautify go.mod and go.sum files
 	@go-mod-upgrade
 	@go mod tidy
 
-.PHONY: clean
-clean: ## Clean the project from built files
-	@rm -f $(COVER_FILE)
-
 .PHONY: up
 up: ## Up local development environments, see hack/docker-compose.yml
 	@PG_USER=$(PG_USER) PG_DBS=$(PG_DBS) PG_PASS=$(PG_PASS) docker compose -f hack/docker-compose.yml --project-directory hack up \
@@ -62,6 +55,10 @@ run: ## Run given `service` on local environment.
 .PHONY: integrations
 integrations: ## Run integrations test
 	@./hack/run-in-docker-compose.sh
+
+.PHONY: clean
+clean: ## Clean the project from built files
+	@rm -f $(COVER_FILE)
 
 .PHONY: help
 help: ## Print this help
