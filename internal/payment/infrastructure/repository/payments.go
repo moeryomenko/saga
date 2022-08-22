@@ -79,8 +79,11 @@ func findPaymentByID(ctx context.Context, tx pgx.Tx, paymentID uuid.UUID) (domai
 func savePayment(ctx context.Context, tx pgx.Tx, customerID uuid.UUID, payment domain.Payment) error {
 	model := mapPaymentToModel(customerID, payment)
 	switch model.Status {
-	case statusNew, statusFailed:
+	case statusNew:
 		_, err := tx.Exec(ctx, insertPaymentQuery, model.PaymentID, model.Status, model.CustomerID, model.OrderID, model.Amount)
+		return err
+	case statusFailed:
+		_, err := tx.Exec(ctx, cancelPaymentByOrderQuery, model.OrderID, model.Status)
 		return err
 	default:
 		_, err := tx.Exec(ctx, updatePaymentQuery, model.PaymentID, model.Status)
@@ -89,9 +92,10 @@ func savePayment(ctx context.Context, tx pgx.Tx, customerID uuid.UUID, payment d
 }
 
 const (
-	findPaymentQuery   = `SELECT customer_id, order_id, amount, status FROM payments WHERE payment_id = $1`
-	findBalanceQuery   = `SELECT available_amount, reserved_amount FROM balances WHERE customer_id = $1`
-	updateBalanceQuery = `UPDATE balances SET available_amount = $2, reserved_amount = $3 WHERE customer_id = $1`
-	insertPaymentQuery = `INSERT INTO payments(payment_id, status, customer_id, order_id, amount) VALUES ($1, $2, $3, $4, $5)`
-	updatePaymentQuery = `UPDATE payments SET status = $2 WHERE payment_id = $1`
+	findPaymentQuery          = `SELECT customer_id, order_id, amount, status FROM payments WHERE payment_id = $1`
+	findBalanceQuery          = `SELECT available_amount, reserved_amount FROM balances WHERE customer_id = $1`
+	updateBalanceQuery        = `UPDATE balances SET available_amount = $2, reserved_amount = $3 WHERE customer_id = $1`
+	insertPaymentQuery        = `INSERT INTO payments(payment_id, status, customer_id, order_id, amount) VALUES ($1, $2, $3, $4, $5)`
+	updatePaymentQuery        = `UPDATE payments SET status = $2 WHERE payment_id = $1`
+	cancelPaymentByOrderQuery = `UPDATE payments SET status = $2 WHERE order_id = $1`
 )

@@ -28,6 +28,7 @@ func mapToEvent(order domain.Order) (schema.OrderEvent, bool) {
 		event.SetType(schema.CompleteOrder)
 		event.Items = strings.Join(order.Items, `,`)
 		event.Price = order.Price
+		event.PaymentID = order.PaymentID
 	case domain.CanceledOrder:
 		event.SetType(schema.CancelOrder)
 		event.Items = strings.Join(order.Items, `,`)
